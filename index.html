@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Selección de PAT — Bombas Usadas como Turbinas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --ink:#e7edf1;
+  --ink-dim:#9fb0ba;
+  --ink-faint:#6d7d87;
+  --bg:#111820;
+  --bg-1:#161f29;
+  --bg-2:#1c2733;
+  --line:#2b3946;
+  --line-soft:#232f3b;
+  --teal:#3fb6ac;
+  --teal-dim:#2a7d76;
+  --brass:#d1994a;
+  --brass-dim:#a67638;
+  --amber:#e0a458;
+  --red:#e0685a;
+  --green:#6fbf8b;
+  --shadow: 0 8px 24px rgba(0,0,0,.35);
+  --radius: 3px;
+  --serif-num: 'IBM Plex Mono', ui-monospace, monospace;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+}
+:root:not([data-theme="light"]){ }
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --ink:#1b242c;
+    --ink-dim:#4b5b66;
+    --ink-faint:#7c8a93;
+    --bg:#f3f0e8;
+    --bg-1:#ffffff;
+    --bg-2:#eae5d8;
+    --line:#d8d2c2;
+    --line-soft:#e3ddce;
+    --shadow: 0 8px 24px rgba(30,25,10,.10);
+  }
+}
+:root[data-theme="light"]{
+  --ink:#1b242c;
+  --ink-dim:#4b5b66;
+  --ink-faint:#7c8a93;
+  --bg:#f3f0e8;
+  --bg-1:#ffffff;
+  --bg-2:#eae5d8;
+  --line:#d8d2c2;
+  --line-soft:#e3ddce;
+  --shadow: 0 8px 24px rgba(30,25,10,.10);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size: 34px 34px;
+  opacity:.35;
+  pointer-events:none;
+  z-index:0;
+}
+a{color:var(--teal);}
+h1,h2,h3,h4{font-family:var(--sans); font-weight:600; margin:0 0 .4em 0; letter-spacing:-.01em;}
+code, .num{font-family:var(--serif-num);}
+.wrap{position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:0 20px 80px;}
+
+/* ---------------- Header / hero ---------------- */
+header.hero{
+  position:relative; z-index:1;
+  border-bottom:1px solid var(--line);
+  padding:38px 20px 26px;
+  background:
+    radial-gradient(600px 200px at 85% -10%, rgba(63,182,172,.10), transparent 60%);
+}
+.hero-inner{max-width:1180px; margin:0 auto; display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap;}
+.hero-title{max-width:720px;}
+.eyebrow{
+  font-family:var(--serif-num); font-size:12.5px; color:var(--teal);
+  display:flex; align-items:center; gap:10px; margin-bottom:10px;
+}
+.eyebrow .dot{width:6px;height:6px;background:var(--teal);border-radius:50%;display:inline-block;}
+h1.title{font-size:clamp(26px,3.4vw,38px); line-height:1.08; margin-bottom:10px;}
+h1.title em{font-style:normal; color:var(--teal);}
+.hero-sub{color:var(--ink-dim); max-width:60ch; font-size:15px;}
+.hero-diagram{width:220px; flex:none;}
+.hero-diagram svg{width:100%; height:auto; display:block;}
+.theme-toggle{
+  border:1px solid var(--line); background:var(--bg-1); color:var(--ink-dim);
+  border-radius:20px; padding:6px 12px; font-size:12px; cursor:pointer; font-family:var(--serif-num);
+}
+
+/* ---------------- Step nav ---------------- */
+nav.steps{
+  position:sticky; top:0; z-index:5;
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(6px);
+  border-bottom:1px solid var(--line);
+}
+.steps-inner{
+  max-width:1180px; margin:0 auto; padding:0 20px;
+  display:flex; overflow-x:auto; gap:2px;
+}
+.step-btn{
+  flex:none; appearance:none; border:none; background:none; cursor:pointer;
+  color:var(--ink-faint); font-family:var(--sans); font-size:13.5px;
+  padding:14px 16px 12px; border-bottom:2px solid transparent; white-space:nowrap;
+  display:flex; align-items:center; gap:8px;
+}
+.step-btn .n{
+  font-family:var(--serif-num); font-size:11px; width:18px; height:18px; border-radius:50%;
+  border:1px solid var(--ink-faint); display:flex; align-items:center; justify-content:center;
+}
+.step-btn.active{color:var(--ink); border-bottom-color:var(--teal);}
+.step-btn.active .n{border-color:var(--teal); color:var(--teal);}
+.step-btn.done .n{background:var(--teal-dim); border-color:var(--teal-dim); color:#fff;}
+
+/* ---------------- Panels ---------------- */
+.panel{
+  background:var(--bg-1); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 26px 24px; margin-top:26px;
+}
+.panel + .panel{margin-top:18px;}
+.panel h2{font-size:19px; display:flex; align-items:center; gap:10px;}
+.panel h2 .tag{
+  font-family:var(--serif-num); font-size:11px; color:var(--teal); border:1px solid var(--teal-dim);
+  padding:2px 7px; border-radius:20px;
+}
+.panel .desc{color:var(--ink-dim); font-size:13.5px; margin-bottom:18px; max-width:75ch;}
+.section-grid{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+@media (max-width:820px){ .section-grid{grid-template-columns:1fr;} .hero-diagram{display:none;} }
+
+.field{margin-bottom:14px;}
+.field label{
+  display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+  font-size:13px; color:var(--ink-dim); margin-bottom:5px;
+}
+.field label .unit{font-family:var(--serif-num); color:var(--ink-faint); font-size:11.5px; white-space:nowrap; flex:none;}
+.field label .label-text{min-width:0;}
+.field input, .field select{
+  width:100%; background:var(--bg-2); border:1px solid var(--line); color:var(--ink);
+  padding:9px 10px; border-radius:2px; font-family:var(--serif-num); font-size:14.5px;
+}
+.field input:focus, .field select:focus{outline:none; border-color:var(--teal);}
+.field .hint{font-size:11.5px; color:var(--ink-faint); margin-top:4px;}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+.row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+@media (max-width:520px){ .row2,.row3{grid-template-columns:1fr;} }
+
+.btn{
+  appearance:none; border:1px solid var(--teal-dim); background:var(--teal); color:#08201d;
+  font-family:var(--sans); font-weight:600; font-size:13.5px; padding:10px 18px;
+  border-radius:2px; cursor:pointer;
+}
+.btn.secondary{background:transparent; color:var(--ink); border-color:var(--line);}
+.btn.brass{background:var(--brass); border-color:var(--brass-dim); color:#2a1a05;}
+.btn:hover{filter:brightness(1.08);}
+.btn-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;}
+
+/* ---------------- Results ---------------- */
+.results{
+  background:var(--bg-2); border:1px solid var(--line-soft); border-radius:2px;
+  padding:16px 18px; margin-top:6px;
+}
+.results h3{font-size:12.5px; text-transform:none; color:var(--ink-dim); margin-bottom:12px; font-weight:600;}
+.kv{display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px dashed var(--line-soft); font-size:13.5px;}
+.kv:last-child{border-bottom:none;}
+.kv .k{color:var(--ink-dim);}
+.kv .v{font-family:var(--serif-num); font-weight:600;}
+.kv .v .sub{color:var(--ink-faint); font-weight:400; margin-left:5px;}
+.big-readout{display:flex; gap:22px; flex-wrap:wrap; margin:10px 0 4px;}
+.big-readout .item{flex:1; min-width:130px;}
+.big-readout .item .label{font-size:11.5px; color:var(--ink-dim);}
+.big-readout .item .value{font-family:var(--serif-num); font-size:26px; font-weight:600; color:var(--teal);}
+.big-readout .item .value .unit{font-size:13px; color:var(--ink-faint); font-weight:400; margin-left:3px;}
+
+.badge{display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 10px; border-radius:20px; font-family:var(--serif-num);}
+.badge.ok{background:rgba(111,191,139,.14); color:var(--green); border:1px solid rgba(111,191,139,.4);}
+.badge.warn{background:rgba(224,164,88,.14); color:var(--amber); border:1px solid rgba(224,164,88,.4);}
+.badge.bad{background:rgba(224,104,90,.14); color:var(--red); border:1px solid rgba(224,104,90,.4);}
+
+.note{
+  border-left:3px solid var(--teal-dim); background:rgba(63,182,172,.06);
+  padding:10px 14px; font-size:13px; color:var(--ink-dim); margin:14px 0; border-radius:0 2px 2px 0;
+}
+.note.warn{border-left-color:var(--amber); background:rgba(224,164,88,.08);}
+.note.bad{border-left-color:var(--red); background:rgba(224,104,90,.08);}
+.note strong{color:var(--ink);}
+
+table.datatable{width:100%; border-collapse:collapse; font-size:13px; margin-top:8px;}
+table.datatable th, table.datatable td{
+  padding:7px 10px; border-bottom:1px solid var(--line-soft); text-align:right; font-family:var(--serif-num);
+}
+table.datatable th{color:var(--ink-dim); font-family:var(--sans); font-weight:600; text-align:right;}
+table.datatable td:first-child, table.datatable th:first-child{text-align:left; font-family:var(--sans);}
+
+.chart-box{background:var(--bg-2); border:1px solid var(--line-soft); border-radius:2px; padding:14px; margin-top:14px;}
+.chart-box canvas{max-height:340px;}
+
+footer{
+  max-width:1180px; margin:40px auto 0; padding:22px 20px; border-top:1px solid var(--line);
+  color:var(--ink-faint); font-size:12px; position:relative; z-index:1;
+}
+.step-pane{display:none;}
+.step-pane.active{display:block;}
+.small{font-size:12px; color:var(--ink-faint);}
+hr.sep{border:none; border-top:1px solid var(--line-soft); margin:20px 0;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-title">
+      <div class="eyebrow"><span class="dot"></span> MANUAL PAT · CHAPALLAZ, EICHENBERGER &amp; FISCHER · MHPG SERIES</div>
+      <h1 class="title">Selección de bombas<br>usadas como <em>turbinas</em></h1>
+      <p class="hero-sub">Implementación del procedimiento práctico de selección — numeral 3.5.4 — con interpolación automática de las gráficas de los Anexos B y D, más los módulos de golpe de ariete y cavitación.</p>
+    </div>
+    <div class="hero-diagram" aria-hidden="true">
+      <svg viewBox="0 0 200 190" fill="none">
+        <path d="M20 150 L20 60 L70 30" stroke="var(--brass)" stroke-width="4" stroke-linecap="round"/>
+        <rect x="60" y="70" width="34" height="34" rx="2" stroke="var(--teal)" stroke-width="3" fill="none" transform="rotate(20 77 87)"/>
+        <circle cx="77" cy="87" r="7" stroke="var(--teal)" stroke-width="2.5" fill="none"/>
+        <path d="M94 100 L150 130" stroke="var(--brass)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M150 130 L150 170" stroke="var(--brass)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M10 175 h180" stroke="var(--ink-faint)" stroke-width="1.5" stroke-dasharray="2 4"/>
+        <path d="M40 10 Q90 40 40 70" stroke="var(--ink-faint)" stroke-width="1.5" fill="none" stroke-dasharray="3 3"/>
+        <text x="46" y="24" fill="var(--ink-faint)" font-size="9" font-family="monospace">H,Q</text>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<nav class="steps">
+  <div class="steps-inner" id="stepsNav"></div>
+</nav>
+
+<div class="wrap">
+  <div id="stepPanes">
+
+  <!-- ============================================================ -->
+  <!-- PASO 1 — DATOS DE DISEÑO -->
+  <!-- ============================================================ -->
+  <section class="step-pane active" data-step="1">
+    <div class="panel">
+      <h2><span class="tag">PASO 1–3</span> Datos de diseño y velocidad específica</h2>
+      <p class="desc">Ingrese las condiciones de diseño del aprovechamiento (numeral 3.5.4, puntos 1 a 3). Si el PAT requiere varias etapas o entradas, indíquelo para relacionar el caudal/cabeza a una etapa y entrada única (fórmula 3.13/3.18).</p>
+
+      <div class="section-grid">
+        <div>
+          <div class="field">
+            <label><span class="label-text">Carga hidráulica de diseño (neta) H<sub>nt</sub></span> <span class="unit">m</span></label>
+            <input type="number" id="in_Hnt" value="12.60" step="0.01">
+          </div>
+          <div class="field">
+            <label><span class="label-text">Caudal de diseño Q<sub>nt</sub></span> <span class="unit">m³/s</span></label>
+            <input type="number" id="in_Qnt" value="0.100" step="0.001">
+          </div>
+          <div class="field">
+            <label><span class="label-text">Velocidad nominal propuesta de la turbina n<sub>t</sub></span> <span class="unit">rpm</span></label>
+            <input type="number" id="in_nt" value="1540" step="1">
+            <div class="hint">1500 rpm suele ser un buen compromiso entre tamaño del PAT y velocidad de embalamiento (sección 3.5.4, punto 2). Use un múltiplo/submúltiplo de la velocidad de sincronismo si acoplará un generador directamente.</div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label>Nº de etapas i<sub>st</sub></label>
+              <input type="number" id="in_ist" value="1" min="1" step="1">
+            </div>
+            <div class="field">
+              <label>Nº de entradas i<sub>fl</sub></label>
+              <input type="number" id="in_ifl" value="1" min="1" step="1">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn" onclick="Steps.calcStep1()">Calcular velocidad específica</button>
+            <button class="btn secondary" onclick="Validation.load()">Cargar ejemplo del Capítulo 7</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="results">
+            <h3>Resultado — velocidad específica de la instalación</h3>
+            <div class="big-readout">
+              <div class="item"><div class="label">n<sub>q,ti</sub> (modo turbina)</div><div class="value" id="out_nqti">—</div></div>
+              <div class="item"><div class="label">n<sub>q,p</sub> (modo bomba, ec. 3.14)</div><div class="value" id="out_nqp">—</div></div>
+            </div>
+            <hr class="sep">
+            <div class="kv"><span class="k">Potencia hidráulica bruta P = ρgQH</span><span class="v" id="out_Phyd">—</span></div>
+            <div class="kv"><span class="k">H por etapa H<sub>ti</sub></span><span class="v" id="out_Hti">—</span></div>
+            <div class="kv"><span class="k">Q por entrada Q<sub>ti</sub></span><span class="v" id="out_Qti">—</span></div>
+            <div id="out_patType"></div>
+            <div id="out_nqWarning"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PASO 2 — PRESELECCIÓN -->
+  <!-- ============================================================ -->
+  <section class="step-pane" data-step="2">
+    <div class="panel">
+      <h2><span class="tag">PASO 4–7</span> Preselección: condiciones objetivo de bomba</h2>
+      <p class="desc">A partir de n<sub>q,p</sub>, la app interpola automáticamente la eficiencia máxima de bomba disponible (Fig. 3.21 / Diagrama D3) y los factores de conversión C<sub>H</sub>, C<sub>Q</sub> (Fig. 3.19 / Diagrama D2), para estimar qué bomba de catálogo buscar.</p>
+
+      <div class="section-grid">
+        <div>
+          <div class="results">
+            <h3>Interpolado automáticamente</h3>
+            <div class="kv"><span class="k">Caudal estimado de bomba Q<sub>np</sub> ≈ Q<sub>ti</sub>/1.3</span><span class="v" id="out_Qnp_est">—</span></div>
+            <div class="kv"><span class="k">Eficiencia máx. de bomba η<sub>p,max</sub> (Diagrama D3)</span><span class="v" id="out_etaP">—</span></div>
+            <div class="kv"><span class="k">Factor de conversión de carga C<sub>H</sub> = H<sub>t</sub>/H<sub>p</sub> (Diagrama D2)</span><span class="v" id="out_CH1">—</span></div>
+            <div class="kv"><span class="k">Factor de conversión de caudal C<sub>Q</sub> = Q<sub>t</sub>/Q<sub>p</sub></span><span class="v" id="out_CQ1">—</span></div>
+            <div class="kv"><span class="k">Banda de eficiencia usada en Diagrama D2</span><span class="v" id="out_band1">—</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="results">
+            <h3>Condiciones de bomba objetivo (ec. 3.16)</h3>
+            <div class="kv"><span class="k">H<sub>np</sub> a la velocidad n<sub>t</sub></span><span class="v" id="out_Hnp_nt">—</span></div>
+            <div class="kv"><span class="k">Q<sub>np</sub> a la velocidad n<sub>t</sub></span><span class="v" id="out_Qnp_nt">—</span></div>
+            <hr class="sep">
+            <div class="field">
+              <label><span class="label-text">Velocidad nominal candidata de catálogo n<sub>p</sub></span> <span class="unit">rpm</span></label>
+              <input type="number" id="in_np_candidate" value="1450" step="1">
+            </div>
+            <button class="btn secondary" onclick="Steps.calcStep2()">Recalcular a n<sub>p</sub></button>
+            <div class="kv" style="margin-top:10px;"><span class="k">H<sub>np</sub> a la velocidad n<sub>p</sub> (ec. 3.17)</span><span class="v" id="out_Hnp_np">—</span></div>
+            <div class="kv"><span class="k">Q<sub>np</sub> a la velocidad n<sub>p</sub></span><span class="v" id="out_Qnp_np">—</span></div>
+          </div>
+          <div class="note">Busque en catálogo una bomba cuyo punto de máxima eficiencia esté <strong>ligeramente por debajo</strong> de estos valores de H<sub>np</sub>/Q<sub>np</sub>: así el PAT operará en sobrecarga, sección 3.5.5 (recomendado, Fig. 3.22).</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PASO 3 — BOMBA SELECCIONADA -->
+  <!-- ============================================================ -->
+  <section class="step-pane" data-step="3">
+    <div class="panel">
+      <h2><span class="tag">PASO 8–9</span> Bomba seleccionada → punto óptimo en modo turbina</h2>
+      <p class="desc">Ingrese los datos de catálogo de la bomba realmente elegida. La app calcula su velocidad específica real, vuelve a leer las curvas C<sub>H</sub>/C<sub>Q</sub>, aplica las bandas de incertidumbre (±10% carga, ±7.5% caudal, sección 3.5.4 punto 8b) y entrega el rango de operación esperado del PAT en su punto óptimo.</p>
+      <div class="section-grid">
+        <div>
+          <div class="row2">
+            <div class="field"><label><span class="label-text">Carga nominal de la bomba H<sub>np</sub></span> <span class="unit">m</span></label><input type="number" id="in_Hnp" value="6.65" step="0.01"></div>
+            <div class="field"><label><span class="label-text">Caudal nominal de la bomba Q<sub>np</sub></span> <span class="unit">m³/s</span></label><input type="number" id="in_Qnp" value="0.075" step="0.001"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label><span class="label-text">Eficiencia máxima de la bomba η<sub>p,max</sub></span> <span class="unit">0–1</span></label><input type="number" id="in_etaPmax" value="0.76" step="0.01" min="0.1" max="0.95"></div>
+            <div class="field"><label><span class="label-text">Velocidad nominal real de la bomba n<sub>p</sub></span> <span class="unit">rpm</span></label><input type="number" id="in_np_real" value="1450" step="1"></div>
+          </div>
+          <button class="btn" onclick="Steps.calcStep3()">Calcular punto óptimo en modo turbina</button>
+          <div class="results" style="margin-top:16px;">
+            <h3>Velocidad específica real y factores leídos</h3>
+            <div class="kv"><span class="k">n<sub>q,pi</sub> (bomba seleccionada, ec. 3.18)</span><span class="v" id="out_nqpi">—</span></div>
+            <div class="kv"><span class="k">C<sub>H</sub> / C<sub>Q</sub> centrales (Diagrama D2)</span><span class="v" id="out_CHCQ2">—</span></div>
+            <div class="kv"><span class="k">C<sub>H,max</sub> / C<sub>H,min</sub> (±10%)</span><span class="v" id="out_CHrange">—</span></div>
+            <div class="kv"><span class="k">C<sub>Q,max</sub> / C<sub>Q,min</sub> (±7.5%)</span><span class="v" id="out_CQrange">—</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="results">
+            <h3>Punto óptimo del PAT a la velocidad n<sub>t</sub> (ec. 3.19–3.21)</h3>
+            <table class="datatable">
+              <tr><th>Variable</th><th>Máximo</th><th>Mínimo</th></tr>
+              <tr><td>H<sub>nt</sub> bep (m)</td><td id="t_Hmax">—</td><td id="t_Hmin">—</td></tr>
+              <tr><td>Q<sub>nt</sub> bep (m³/s)</td><td id="t_Qmax">—</td><td id="t_Qmin">—</td></tr>
+              <tr><td>Potencia P<sub>nt</sub> (kW)</td><td id="t_Pmax">—</td><td id="t_Pmin">—</td></tr>
+            </table>
+            <div class="hint" style="margin-top:8px;">Potencia con η<sub>t</sub> = η<sub>p,max</sub> − 0.03 (Fig. 3.23 / ec. 3.21).</div>
+          </div>
+          <div class="note">Este es el <strong>rango esperado</strong> del punto de mejor eficiencia del PAT — no el punto de diseño exacto. El caudal/cabeza reales de operación (con la curva de resistencia del sistema) se calculan en la pestaña «Golpe de ariete».</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PASO 4 — CURVAS FUERA DEL BEP -->
+  <!-- ============================================================ -->
+  <section class="step-pane" data-step="4">
+    <div class="panel">
+      <h2><span class="tag">PASO 10</span> Comportamiento del PAT fuera del punto óptimo</h2>
+      <p class="desc">Curvas normalizadas H<sub>t</sub>/H<sub>nt</sub> y P<sub>t</sub>/P<sub>nt</sub> en función de Q<sub>t</sub>/Q<sub>nt</sub>, interpoladas de los Diagramas D4/D5 según la velocidad específica n<sub>q,p</sub> de la bomba seleccionada.</p>
+      <div class="chart-box"><canvas id="chartOffBep"></canvas></div>
+      <table class="datatable" id="offBepTable" style="margin-top:14px;"></table>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PASO 5 — GOLPE DE ARIETE -->
+  <!-- ============================================================ -->
+  <section class="step-pane" data-step="5">
+    <div class="panel">
+      <h2><span class="tag">SECCIÓN 4.4</span> Golpe de ariete por rechazo de carga</h2>
+      <p class="desc">Método gráfico de Chapallaz (Fig. 4.11–4.15) resuelto numéricamente: intersección de la curva de comportamiento del PAT y de la línea de embalamiento con la curva de resistencia del sistema, y de la recta de Joukowsky con la característica a par nulo.</p>
+
+      <div class="section-grid">
+        <div>
+          <div class="field">
+            <label><span class="label-text">Altura estática del aprovechamiento H<sub>static</sub></span> <span class="unit">m</span></label>
+            <input type="number" id="in_Hstatic" value="15.0" step="0.1">
+            <div class="hint">Altura bruta (cabeza a caudal cero). Necesaria para construir la curva de resistencia del sistema H=H<sub>static</sub>−kQ²; la app calcula k a partir de este valor y del punto de diseño (H<sub>nt</sub>,Q<sub>nt</sub>) del Paso 1. <strong>Dato adicional no listado explícitamente por usted</strong> — indispensable para el método del manual; si no se conoce con precisión, un valor razonable es la cabeza bruta topográfica del sitio.</div>
+          </div>
+          <div class="row2">
+            <div class="field"><label><span class="label-text">Longitud de la tubería forzada L</span> <span class="unit">m</span></label><input type="number" id="in_L" value="235" step="1"></div>
+            <div class="field"><label><span class="label-text">Diámetro de la tubería forzada D</span> <span class="unit">m</span></label><input type="number" id="in_D" value="0.225" step="0.001"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label><span class="label-text">Celeridad de la onda a</span> <span class="unit">m/s</span></label><input type="number" id="in_a" value="1214" step="1"></div>
+            <div class="field"><label><span class="label-text">Momento de inercia J (PAT+generador)</span> <span class="unit">kg·m²</span></label><input type="number" id="in_J" value="0.05" step="0.001"></div>
+          </div>
+          <button class="btn" onclick="Steps.calcStep5()">Calcular golpe de ariete</button>
+        </div>
+
+        <div>
+          <div class="results">
+            <h3>Rango de operación efectivo y embalamiento (Fig. 3.25 / 4.11)</h3>
+            <div class="kv"><span class="k">Coef. sistema k (H=H<sub>static</sub>−kQ²)</span><span class="v" id="out_kSys">—</span></div>
+            <div class="kv"><span class="k">Q<sub>eff,t max</sub> / H<sub>eff,t max</sub></span><span class="v" id="out_effMax">—</span></div>
+            <div class="kv"><span class="k">Q<sub>eff,t min</sub> / H<sub>eff,t min</sub></span><span class="v" id="out_effMin">—</span></div>
+            <div class="kv"><span class="k">ε / κ (Fig. 3.30, embalamiento)</span><span class="v" id="out_epsKappa">—</span></div>
+            <div class="kv"><span class="k">H<sub>tR</sub> / Q<sub>tR</sub> / n<sub>R</sub> (embalamiento en régimen permanente)</span><span class="v" id="out_runaway">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="section-grid">
+        <div>
+          <div class="results">
+            <h3>Parámetros de tiempo</h3>
+            <div class="kv"><span class="k">Tiempo de reflexión T<sub>r</sub> = 2L/a</span><span class="v" id="out_Tr">—</span></div>
+            <div class="kv"><span class="k">Tiempo unitario de aceleración T<sub>a</sub></span><span class="v" id="out_Ta">—</span></div>
+            <div class="kv"><span class="k">Tiempo efectivo de aceleración T<sub>a,eff</sub></span><span class="v" id="out_Taeff">—</span></div>
+            <div id="out_regimeBadge"></div>
+          </div>
+        </div>
+        <div>
+          <div class="results">
+            <h3>Resultado — sobrepresión y velocidad máximas</h3>
+            <div class="big-readout">
+              <div class="item"><div class="label">H<sub>max</sub> (golpe de ariete)</div><div class="value" id="out_Hmax">—</div></div>
+              <div class="item"><div class="label">n<sub>R,max</sub></div><div class="value" id="out_nRmax">—</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-box"><canvas id="chartWaterhammer"></canvas></div>
+      <div id="out_whNote"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PASO 6 — CAVITACIÓN -->
+  <!-- ============================================================ -->
+  <section class="step-pane" data-step="6">
+    <div class="panel">
+      <h2><span class="tag">SECCIÓN 3.6.2 / ANEXO A</span> Riesgo de cavitación — NPSH y TREH</h2>
+      <p class="desc">NPSH disponible según la ecuación A.9 del manual, comparado con el TREH (Total Required Exhaust Head) estimado a partir del número de cavitación σ de Thoma (Fig. 3.32) para la velocidad específica de la bomba seleccionada.</p>
+      <div class="section-grid">
+        <div>
+          <div class="row2">
+            <div class="field"><label><span class="label-text">Presión atmosférica p<sub>atm</sub></span> <span class="unit">Pa</span></label><input type="number" id="in_patm" value="97000" step="100"></div>
+            <div class="field"><label><span class="label-text">Densidad del agua ρ</span> <span class="unit">kg/m³</span></label><input type="number" id="in_rho" value="998.2" step="0.1"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label><span class="label-text">H<sub>stat,succión</sub></span> <span class="unit">m</span></label><input type="number" id="in_Hstatsuc" value="2.00" step="0.01"></div>
+            <div class="field"><label><span class="label-text">H<sub>loss,succión</sub></span> <span class="unit">m</span></label><input type="number" id="in_Hlosssuc" value="0.91" step="0.01"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label><span class="label-text">Diámetro tubería de succión</span> <span class="unit">m</span></label><input type="number" id="in_Dsuc" value="0.25" step="0.001"></div>
+            <div class="field"><label><span class="label-text">Carga de vapor p<sub>v</sub>/(ρg)</span> <span class="unit">m</span></label><input type="number" id="in_Hvap" value="0.239" step="0.001"></div>
+          </div>
+          <div class="field">
+            <label><input type="checkbox" id="in_isTurbine" checked style="width:auto; margin-right:6px;">Referir NPSH al punto más alto del rodete (modo turbina, Fig. A12)</label>
+          </div>
+          <div class="field" id="fieldRunnerD">
+            <label><span class="label-text">Diámetro del rodete D</span> <span class="unit">m</span></label>
+            <input type="number" id="in_runnerD" value="0.195" step="0.001">
+            <div class="hint">NPSH se referencia a H<sub>stat,succión</sub> + D/2 en modo turbina (Fig. A12), a diferencia del modo bomba que usa el eje.</div>
+          </div>
+          <button class="btn" onclick="Steps.calcStep6()">Calcular NPSH y TREH</button>
+
+          <div class="results" style="margin-top:16px;">
+            <h3>Referencia — Anexo A (agua): use para estimar ρ y la carga de vapor</h3>
+            <table class="datatable">
+              <tr><th>T (°C)</th><th>ρ (kg/m³)</th><th>p<sub>v</sub> (N/m²)</th><th>p<sub>v</sub>/ρg (m)</th></tr>
+              <tr><td>0</td><td>999.9</td><td>611</td><td>0.0624</td></tr>
+              <tr><td>5</td><td>1000.0</td><td>872</td><td>0.0889</td></tr>
+              <tr><td>10</td><td>999.7</td><td>1228</td><td>0.1253</td></tr>
+              <tr><td>20</td><td>998.2</td><td>2338</td><td>0.2388</td></tr>
+              <tr><td>30</td><td>995.7</td><td>4243</td><td>0.4344</td></tr>
+              <tr><td>40</td><td>992.2</td><td>7376</td><td>0.7578</td></tr>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="results">
+            <h3>Resultado</h3>
+            <div class="kv"><span class="k">Velocidad de succión v<sub>s</sub> = Q/A</span><span class="v" id="out_vs">—</span></div>
+            <div class="kv"><span class="k">Altura de velocidad v<sub>s</sub>²/2g</span><span class="v" id="out_vh">—</span></div>
+            <div class="big-readout">
+              <div class="item"><div class="label">NPSH disponible (ec. A.9)</div><div class="value" id="out_NPSH">—</div></div>
+              <div class="item"><div class="label">TREH estimado (σ·H<sub>nt</sub>)</div><div class="value" id="out_TREH">—</div></div>
+            </div>
+            <div class="kv"><span class="k">σ (Fig. 3.32, curva de bombas) a n<sub>q</sub></span><span class="v" id="out_sigma">—</span></div>
+            <div id="out_cavBadge" style="margin-top:10px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PASO 7 — VALIDACIÓN -->
+  <!-- ============================================================ -->
+  <section class="step-pane" data-step="7">
+    <div class="panel">
+      <h2><span class="tag">VALIDACIÓN</span> Comparación con el ejemplo resuelto — Capítulo 7</h2>
+      <p class="desc">Carga automáticamente todos los datos del ejemplo manuscrito del manual (secciones 6.2/7, Apéndice A) y compara cada resultado calculado por esta app contra el valor original del manual.</p>
+      <button class="btn brass" onclick="Validation.load()">Cargar datos del ejemplo y recalcular todo</button>
+      <div id="validationTableWrap"></div>
+      <div class="note warn" style="margin-top:18px;">
+        <strong>Nota de validación — signo en la fórmula de NPSH (Apéndice A.9):</strong>
+        El manual define NPSH<sub>disponible</sub> = p<sub>atm</sub>/ρg − H<sub>stat,succión</sub> − H<sub>loss,succión</sub> − v<sub>s</sub>²/2g − p<sub>v</sub>/ρg (todos los términos restando, ver ecuación A.9). Sin embargo, el cálculo manuscrito del ejemplo del Capítulo 7 (pág. 141) usa <code>−2.10 + 0.91 − 0.30 − …</code>, es decir, suma la pérdida de succión en vez de restarla, para obtener 8.18 m. Aplicando la ecuación A.9 tal como está impresa (con signo físicamente consistente, pues una pérdida de carga siempre reduce el NPSH disponible) se obtiene <strong>6.36 m</strong> en su lugar. Esta app usa la ecuación A.9 tal como está definida en el recuadro; lo señalamos aquí porque probablemente es un error de transcripción del ejemplo manuscrito original, no un error de la fórmula.
+      </div>
+      <div class="note" style="margin-top:10px;">
+        <strong>Otras observaciones sobre el ejemplo original:</strong> el manuscrito calcula Q<sub>nt,max</sub>(n<sub>p</sub>) = 1.54 × 0.077 = 0.119 m³/s (paso 8c), reutilizando por error el caudal preliminar Q<sub>np</sub>≈0.077 m³/s del paso 4 en lugar del caudal 0.075 m³/s de la bomba realmente seleccionada en el paso 7. Esta app siempre usa de forma consistente el dato de la bomba seleccionada.
+      </div>
+      <div class="note" style="margin-top:10px;">
+        <strong>Sobre la longitud de tubería usada en el golpe de ariete:</strong> el manuscrito indica T<sub>r</sub>=2L/a=0.044 s con a=1214 m/s, lo que implica L≈26.7 m. Sin embargo, la Fig. A11 (Apéndice A) describe para este mismo sitio un total de tubería forzada de aprox. 290 m (tramos de 50+170+50+20 m). No es posible reconciliar ambos datos únicamente a partir de las páginas escaneadas — probablemente el sitio incluye una cámara de carga o tanque rompe-presión cerca del PAT que acorta la longitud de reflexión efectiva, pero esto no se muestra explícitamente en la figura disponible. Para esta validación usamos L=26.7 m (el valor consistente con el resultado T<sub>r</sub> del manuscrito); en su propio proyecto, ingrese la longitud real de tubería entre el PAT y el punto de presión fija más cercano (embalse, tanque o cámara de carga).
+      </div>
+    </div>
+  </section>
+
+  </div>
+</div>
+
+<footer>
+  Herramienta de cálculo basada en Chapallaz, Eichenberger &amp; Fischer, <em>Manual on Pumps Used as Turbines</em> (MHPG Series, Vieweg, 1992), sección 3.5.4 y Anexos A, B y D. Las curvas gráficas del manual fueron digitalizadas numéricamente para interpolación automática; ver pestaña «Validación» para el detalle de precisión frente al ejemplo resuelto del Capítulo 7. Herramienta de apoyo al diseño preliminar — no sustituye datos de fábrica del fabricante de la bomba seleccionada.
+</footer>
+
+<script>
+/* ============================================================================
+   MOTOR DE CÁLCULO — Selección de Bombas Usadas como Turbinas (PAT)
+   Chapallaz, Eichenberger, Fischer — "Manual on Pumps Used as Turbines"
+   (MHPG Series, Vieweg, 1992), sección 3.5.4 y Apéndices A, B, D.
+   ============================================================================ */
+const PAT = (function () {
+  const g = 9.81;
+  function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
+
+  function interpLin(xs, ys, x) {
+    if (x <= xs[0]) return ys[0];
+    if (x >= xs[xs.length - 1]) return ys[ys.length - 1];
+    for (let i = 0; i < xs.length - 1; i++) {
+      if (x >= xs[i] && x <= xs[i + 1]) {
+        const t = (x - xs[i]) / (xs[i + 1] - xs[i]);
+        return ys[i] + t * (ys[i + 1] - ys[i]);
+      }
+    }
+  }
+  function interpLog(xs, ys, x) {
+    if (x <= xs[0]) return ys[0];
+    if (x >= xs[xs.length - 1]) return ys[ys.length - 1];
+    for (let i = 0; i < xs.length - 1; i++) {
+      if (x >= xs[i] && x <= xs[i + 1]) {
+        const t = (Math.log(x) - Math.log(xs[i])) / (Math.log(xs[i + 1]) - Math.log(xs[i]));
+        return ys[i] + t * (ys[i + 1] - ys[i]);
+      }
+    }
+  }
+  function bisect(f, lo, hi, iters = 80) {
+    let flo = f(lo), fhi = f(hi);
+    if (flo === 0) return lo;
+    if (fhi === 0) return hi;
+    if ((flo > 0) === (fhi > 0)) return Math.abs(flo) < Math.abs(fhi) ? lo : hi;
+    let a = lo, b = hi, fa = flo;
+    for (let i = 0; i < iters; i++) {
+      const m = 0.5 * (a + b);
+      const fm = f(m);
+      if ((fm > 0) === (fa > 0)) { a = m; fa = fm; } else { b = m; }
+    }
+    return 0.5 * (a + b);
+  }
+  function nq(n, Q, H) { return (n * Math.sqrt(Q)) / Math.pow(H, 0.75); }
+
+  // Fig. 3.19 / Diagrama D2 — CH = Ht/Hp , CQ = Qt/Qp, por banda de eficiencia
+  const D2_BANDS = {
+    55: { nqp: [13, 15, 20, 25, 30], CH: [2.40, 1.95, 1.65, 1.55, 1.50], CQ: [2.05, 1.85, 1.55, 1.46, 1.40] },
+    70: { nqp: [15, 20, 30, 40, 48, 55], CH: [1.85, 1.65, 1.50, 1.47, 1.47, 1.50], CQ: [1.65, 1.40, 1.28, 1.29, 1.35, 1.40] },
+    80: { nqp: [20, 30, 40, 50, 60, 70, 81.8, 95.9, 110], CH: [1.55, 1.40, 1.33, 1.30, 1.32, 1.38, 1.50, 1.60, 1.72], CQ: [1.30, 1.25, 1.22, 1.22, 1.26, 1.32, 1.37, 1.43, 1.50] },
+    86: { nqp: [28, 40, 50, 60, 70, 80, 90, 100, 110], CH: [1.40, 1.30, 1.27, 1.28, 1.30, 1.33, 1.38, 1.40, 1.45], CQ: [1.25, 1.20, 1.19, 1.20, 1.21, 1.22, 1.24, 1.25, 1.26] },
+  };
+  function pickBand(etaPercent) {
+    if (etaPercent < 65) return 55;
+    if (etaPercent < 75) return 70;
+    if (etaPercent < 85) return 80;
+    return 86;
+  }
+  function CH_CQ(nqp, etaPpercent) {
+    const bandKey = pickBand(etaPpercent);
+    const band = D2_BANDS[bandKey];
+    return { CH: interpLin(band.nqp, band.CH, nqp), CQ: interpLin(band.nqp, band.CQ, nqp), band: bandKey };
+  }
+
+  // Fig. 3.21 / Diagrama D3 — eficiencia máxima de bomba ηp,max(nqp, Qnp)
+  const _etaList = [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.78, 0.80, 0.82, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.90, 0.905, 0.91, 0.915];
+  const D3_COLUMNS = {
+    20: { eta: _etaList, Q: [0.0073, 0.0112, 0.0134, 0.0223, 0.0321, 0.0435, 0.0553, 0.0713, 0.0869, 0.322, 0.653, 0.767, 1.375, 2.12, 3.05, 4.16, 5.44, 6.83, 8.36] },
+    40: { eta: _etaList, Q: [0.0054, 0.0070, 0.0129, 0.0211, 0.0304, 0.0386, 0.0527, 0.0680, 0.0829, 0.5209, 0.6085, 0.6846, 1.3057, 2.0143, 2.9368, 3.9519, 5.1454, 6.5434, 8.0132] },
+    80: { eta: _etaList, Q: [0.0067, 0.0124, 0.0192, 0.0291, 0.0394, 0.0503, 0.0571, 0.0652, 0.0787, 0.3131, 0.452, 0.6531, 1.2456, 1.9216, 2.7884, 3.7878, 4.9317, 6.2716, 7.6443] },
+    100:{ eta: _etaList, Q: [0.0069, 0.0122, 0.0169, 0.0200, 0.0287, 0.0390, 0.0498, 0.0616, 0.0783, 0.1529, 0.2987, 0.6439, 1.2339, 1.9036, 2.7622, 3.7346, 4.8625, 6.1545, 7.5726] },
+  };
+  const D3_NQP_COLS = Object.keys(D3_COLUMNS).map(Number).sort((a, b) => a - b);
+  function etaMaxAtColumn(col, Q) { const c = D3_COLUMNS[col]; return interpLog(c.Q, c.eta, Q); }
+  function etaMaxPump(nqp, Qnp) {
+    const nqpC = clamp(nqp, D3_NQP_COLS[0], D3_NQP_COLS[D3_NQP_COLS.length - 1]);
+    let lo = D3_NQP_COLS[0], hi = D3_NQP_COLS[D3_NQP_COLS.length - 1];
+    for (const c of D3_NQP_COLS) { if (c <= nqpC) lo = c; }
+    for (let i = D3_NQP_COLS.length - 1; i >= 0; i--) { if (D3_NQP_COLS[i] >= nqpC) hi = D3_NQP_COLS[i]; }
+    const eLo = etaMaxAtColumn(lo, Qnp);
+    if (lo === hi) return eLo;
+    const eHi = etaMaxAtColumn(hi, Qnp);
+    const t = (nqpC - lo) / (hi - lo);
+    return eLo + t * (eHi - eLo);
+  }
+
+  // Fig. 3.30 — ε, κ (embalamiento en modo bomba invertida a Hnp), rectas de diseño
+  function epsilonKappa(nqp) {
+    const nqpC = clamp(nqp, 15, 110);
+    return { epsilon: 1.15 + 0.00334 * (nqpC - 15), kappa: 0.40 + 0.00742 * (nqpC - 15) };
+  }
+
+  // Diagramas D4/D5 — comportamiento fuera del bep
+  const D4D5 = {
+    20:  { H: [0.73, 0.85, 1.00, 1.15, 1.33], P: [0.51, 0.73, 1.00, 1.25, 1.50] },
+    95.9:{ H: [0.65, 0.82, 1.00, 1.22, 1.45], P: [0.45, 0.72, 1.00, 1.32, 1.64] },
+    110: { H: [0.64, 0.82, 1.00, 1.25, 1.49], P: [0.43, 0.70, 1.00, 1.30, 1.62] },
+  };
+  const D4D5_QRATIOS = [0.8, 0.9, 1.0, 1.1, 1.2];
+  const D4D5_NQP = [20, 95.9, 110];
+  function offBepCurve(nqp) {
+    const nqpC = clamp(nqp, 20, 110);
+    function interpAt(idx, key) {
+      const ys = D4D5_NQP.map((c) => D4D5[c][key][idx]);
+      return interpLin(D4D5_NQP, ys, nqpC);
+    }
+    return { Qratios: D4D5_QRATIOS, H: D4D5_QRATIOS.map((_, i) => interpAt(i, 'H')), P: D4D5_QRATIOS.map((_, i) => interpAt(i, 'P')) };
+  }
+
+  // Fig. 3.32 — número de cavitación σ (curva "Pumps", recomendada para PAT)
+  const SIGMA_NQ =  [15, 20, 30, 40, 50, 65, 80, 95.9, 110, 130, 150, 180];
+  const SIGMA_VAL = [0.015, 0.025, 0.045, 0.075, 0.115, 0.18, 0.32, 0.55, 0.62, 0.78, 0.95, 1.25];
+  function sigmaPAT(nq_) { return interpLin(SIGMA_NQ, SIGMA_VAL, clamp(nq_, SIGMA_NQ[0], SIGMA_NQ[SIGMA_NQ.length - 1])); }
+
+  // Pasos 1-3
+  function stepSpecificSpeed(Hnt, Qnt, nt, ist, ifl) {
+    const Hti = Hnt / ist, Qti = Qnt / ifl;
+    const nqti = nq(nt, Qti, Hti);
+    return { Hti, Qti, nqti, nqp: nqti / 0.89 };
+  }
+  // Pasos 4-7
+  function stepPreliminary(nqp, Qti, Hti, np_candidate, nt) {
+    const Qnp_est = Qti / 1.3;
+    const etaP = etaMaxPump(nqp, Qnp_est);
+    const { CH, CQ, band } = CH_CQ(nqp, etaP * 100);
+    const Hnp_nt = Hti / CH, Qnp_nt = Qti / CQ;
+    let Hnp_np = null, Qnp_np = null;
+    if (np_candidate) { Hnp_np = Hnp_nt * Math.pow(np_candidate / nt, 2); Qnp_np = Qnp_nt * (np_candidate / nt); }
+    return { Qnp_est, etaP, CH, CQ, band, Hnp_nt, Qnp_nt, Hnp_np, Qnp_np };
+  }
+  // Pasos 8-9
+  function stepSelectedPump(Hnp, Qnp, etaPmax, np, nt, ist, ifl) {
+    const Hpi = Hnp / ist, Qpi = Qnp / ifl;
+    const nqpi = nq(np, Qpi, Hpi);
+    const { CH, CQ, band } = CH_CQ(nqpi, etaPmax * 100);
+    const CHmax = 1.1 * CH, CHmin = 0.9 * CH, CQmax = 1.075 * CQ, CQmin = 0.925 * CQ;
+    const Hnt_np_max = CHmax * Hnp, Hnt_np_min = CHmin * Hnp;
+    const Qnt_np_max = CQmax * Qnp, Qnt_np_min = CQmin * Qnp;
+    const r = nt / np;
+    const Hnt_max = Hnt_np_max * r * r, Hnt_min = Hnt_np_min * r * r;
+    const Qnt_max = Qnt_np_max * r, Qnt_min = Qnt_np_min * r;
+    const etaT = etaPmax - 0.03;
+    const Pnt_max = g * Qnt_max * Hnt_max * etaT * 1000 / 1000;
+    const Pnt_min = g * Qnt_min * Hnt_min * etaT * 1000 / 1000;
+    return { Hpi, Qpi, nqpi, CH, CQ, band, CHmax, CHmin, CQmax, CQmin, Hnt_np_max, Hnt_np_min, Qnt_np_max, Qnt_np_min, Hnt_max, Hnt_min, Qnt_max, Qnt_min, etaT, Pnt_max, Pnt_min };
+  }
+  // Paso 11
+  function systemK(Hstatic, Qdesign, Hdesign) { return (Hstatic - Hdesign) / (Qdesign * Qdesign); }
+  function effectiveOperatingPoint(nqpi, Hstatic, k, HntBep, QntBep) {
+    const curve = offBepCurve(nqpi);
+    const f = (Q) => {
+      const ratio = clamp(Q / QntBep, 0.5, 1.8);
+      const Hpat = HntBep * interpLin(curve.Qratios, curve.H, ratio);
+      return Hpat - (Hstatic - k * Q * Q);
+    };
+    const Qsol = bisect(f, 0.3 * QntBep, 2.2 * QntBep);
+    return { Q: Qsol, H: Hstatic - k * Qsol * Qsol };
+  }
+  // Paso 12 — forma cerrada
+  function steadyRunaway(Hstatic, k, epsilon, kappa, Qnp, Hnp, nnp) {
+    const HtR = Hstatic / (1 + (k * kappa * kappa * Qnp * Qnp) / Hnp);
+    const QtR = kappa * Qnp * Math.sqrt(HtR / Hnp);
+    const nR = epsilon * nnp * Math.sqrt(HtR / Hnp);
+    return { HtR, QtR, nR };
+  }
+  // Golpe de ariete — sección 4.4
+  function waterhammer(p) {
+    const A = Math.PI / 4 * p.D * p.D;
+    const Tr = 2 * p.L / p.a;
+    const slope = p.a / (g * A);
+    const noLoadQ = (H) => p.kappa * p.Qnp * Math.sqrt(Math.max(H, 0) / p.Hnp);
+    const fJouk = (H) => H - (p.Hefft_max + slope * (p.Qefft_max - noLoadQ(H)));
+    const Hmax = bisect(fJouk, p.Hefft_max, p.Hefft_max + 300);
+    const omega0 = 2 * Math.PI * p.nt / 60;
+    const T0 = (p.Pefft_max * 1000) / omega0;
+    const Ta = (p.J * omega0) / T0;
+    const Ta_eff = ((p.nR - p.nt) / p.nt) * Ta;
+    const dhMax = Hmax - p.HtR;
+    let HmaxFinal, nRmaxFinal, reduced;
+    if (Ta_eff < Tr) { HmaxFinal = Hmax; nRmaxFinal = p.nR * Math.sqrt(Hmax / p.HtR); reduced = false; }
+    else { const dh = dhMax * (Tr / Ta_eff); HmaxFinal = p.HtR + dh; nRmaxFinal = p.nR * Math.sqrt(HmaxFinal / p.HtR); reduced = true; }
+    return { A, Tr, slope, Hmax, omega0, T0, Ta, Ta_eff, dhMax, reduced, HmaxFinal, nRmaxFinal };
+  }
+  // Cavitación — ecuación A.9
+  function npshAvailable(o) {
+    const A = Math.PI / 4 * o.D_suction * o.D_suction;
+    const vs = o.Q / A;
+    const velocityHead = (vs * vs) / (2 * g);
+    const Hsuction = o.isTurbine ? (o.Hstat_suction + (o.runnerD || 0) / 2) : o.Hstat_suction;
+    const NPSH = (o.patm_Pa / (o.rho * g)) - Hsuction - o.Hloss_suction - velocityHead - (o.Hvap != null ? o.Hvap : (o.Pv_Pa / (o.rho * g)));
+    return { NPSH, vs, velocityHead };
+  }
+  function trehEstimate(nq_, Hn) { const sigma = sigmaPAT(nq_); return { sigma, TREH: sigma * Hn }; }
+
+  return {
+    g, nq, CH_CQ, etaMaxPump, epsilonKappa, offBepCurve, sigmaPAT, systemK,
+    effectiveOperatingPoint, steadyRunaway, waterhammer, npshAvailable, trehEstimate,
+    stepSpecificSpeed, stepPreliminary, stepSelectedPump, bisect, interpLin, clamp,
+  };
+})();
+
+/* ============================================================================
+   FORMATO Y UTILIDADES DE UI
+   ============================================================================ */
+const fmt = (x, d = 3) => (x == null || isNaN(x)) ? '—' : Number(x).toLocaleString('es-CO', { minimumFractionDigits: d, maximumFractionDigits: d });
+const $ = (id) => document.getElementById(id);
+const val = (id) => parseFloat($(id).value);
+
+let STATE = {}; // acumula resultados entre pasos
+
+/* ============================================================================
+   NAVEGACIÓN DE PASOS
+   ============================================================================ */
+const STEP_LABELS = [
+  ['1', 'Datos de diseño'],
+  ['2', 'Preselección'],
+  ['3', 'Bomba seleccionada'],
+  ['4', 'Fuera del bep'],
+  ['5', 'Golpe de ariete'],
+  ['6', 'Cavitación'],
+  ['7', 'Validación'],
+];
+function buildNav() {
+  const nav = $('stepsNav');
+  nav.innerHTML = STEP_LABELS.map(([n, label], i) =>
+    `<button class="step-btn${i === 0 ? ' active' : ''}" data-step="${n}" onclick="goToStep('${n}')"><span class="n">${n}</span>${label}</button>`
+  ).join('');
+}
+function goToStep(n) {
+  document.querySelectorAll('.step-pane').forEach(p => p.classList.toggle('active', p.dataset.step === n));
+  document.querySelectorAll('.step-btn').forEach(b => b.classList.toggle('active', b.dataset.step === n));
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+function markDone(n) { const b = document.querySelector(`.step-btn[data-step="${n}"]`); if (b) b.classList.add('done'); }
+
+/* ============================================================================
+   LÓGICA DE CADA PASO
+   ============================================================================ */
+const Steps = {
+
+  calcStep1() {
+    const Hnt = val('in_Hnt'), Qnt = val('in_Qnt'), nt = val('in_nt');
+    const ist = val('in_ist') || 1, ifl = val('in_ifl') || 1;
+    const r = PAT.stepSpecificSpeed(Hnt, Qnt, nt, ist, ifl);
+    STATE.design = { Hnt, Qnt, nt, ist, ifl, ...r };
+
+    $('out_nqti').innerHTML = fmt(r.nqti, 1);
+    $('out_nqp').innerHTML = fmt(r.nqp, 1);
+    $('out_Phyd').innerHTML = fmt(1000 * PAT.g * Qnt * Hnt / 1000, 2) + ' <span class="sub">kW</span>';
+    $('out_Hti').innerHTML = fmt(r.Hti, 2) + ' <span class="sub">m</span>';
+    $('out_Qti').innerHTML = fmt(r.Qti, 4) + ' <span class="sub">m³/s</span>';
+
+    let typeMsg = '';
+    if (r.nqti < 25) typeMsg = 'PAT radial de baja velocidad específica — considere aumentar etapas si n<sub>q,p</sub> resulta &lt; 15.';
+    else if (r.nqti < 70) typeMsg = 'PAT de flujo radial (rango típico, Anexo D1).';
+    else if (r.nqti < 150) typeMsg = 'PAT de flujo mixto (rango típico, Anexo D1).';
+    else typeMsg = 'PAT de flujo axial (alto n<sub>q</sub>, caudales grandes / cargas bajas).';
+    $('out_patType').innerHTML = `<div class="note">Tipo de PAT probable según n<sub>q,ti</sub>: <strong>${typeMsg}</strong> (orientativo; ver Diagrama D1 del manual para el rango exacto por potencia).</div>`;
+
+    if (r.nqp < 15) {
+      $('out_nqWarning').innerHTML = `<div class="note bad"><strong>n<sub>q,p</sub> &lt; 15:</strong> el manual desaconseja usar bombas de esta velocidad específica tan baja como turbinas (eficiencias bajas e impredecibles, sección 3.5.4 punto 3). Considere aumentar el número de etapas i<sub>st</sub> o reducir la velocidad n<sub>t</sub>.</div>`;
+    } else {
+      $('out_nqWarning').innerHTML = '';
+    }
+    markDone('1');
+    Steps.calcStep2();
+  },
+
+  calcStep2() {
+    if (!STATE.design) { Steps.calcStep1(); return; }
+    const d = STATE.design;
+    const np_candidate = val('in_np_candidate');
+    const r = PAT.stepPreliminary(d.nqp, d.Qti, d.Hti, np_candidate, d.nt);
+    STATE.prelim = r;
+    $('out_Qnp_est').innerHTML = fmt(r.Qnp_est, 4) + ' <span class="sub">m³/s</span>';
+    $('out_etaP').innerHTML = fmt(r.etaP * 100, 1) + ' <span class="sub">%</span>';
+    $('out_CH1').innerHTML = fmt(r.CH, 3);
+    $('out_CQ1').innerHTML = fmt(r.CQ, 3);
+    $('out_band1').innerHTML = `curva "${r.band}%"`;
+    $('out_Hnp_nt').innerHTML = fmt(r.Hnp_nt, 2) + ' <span class="sub">m</span>';
+    $('out_Qnp_nt').innerHTML = fmt(r.Qnp_nt, 4) + ' <span class="sub">m³/s</span>';
+    $('out_Hnp_np').innerHTML = r.Hnp_np != null ? fmt(r.Hnp_np, 2) + ' <span class="sub">m</span>' : '—';
+    $('out_Qnp_np').innerHTML = r.Qnp_np != null ? fmt(r.Qnp_np, 4) + ' <span class="sub">m³/s</span>' : '—';
+    markDone('2');
+  },
+
+  calcStep3() {
+    if (!STATE.design) { Steps.calcStep1(); }
+    const d = STATE.design;
+    const Hnp = val('in_Hnp'), Qnp = val('in_Qnp'), etaPmax = val('in_etaPmax'), np = val('in_np_real');
+    const r = PAT.stepSelectedPump(Hnp, Qnp, etaPmax, np, d.nt, d.ist, d.ifl);
+    STATE.pump = { Hnp, Qnp, etaPmax, np, ...r };
+
+    $('out_nqpi').innerHTML = fmt(r.nqpi, 1);
+    $('out_CHCQ2').innerHTML = `C<sub>H</sub>=${fmt(r.CH, 3)} · C<sub>Q</sub>=${fmt(r.CQ, 3)} <span class="sub">(banda ${r.band}%)</span>`;
+    $('out_CHrange').innerHTML = `${fmt(r.CHmax, 3)} / ${fmt(r.CHmin, 3)}`;
+    $('out_CQrange').innerHTML = `${fmt(r.CQmax, 3)} / ${fmt(r.CQmin, 3)}`;
+    $('t_Hmax').textContent = fmt(r.Hnt_max, 2);
+    $('t_Hmin').textContent = fmt(r.Hnt_min, 2);
+    $('t_Qmax').textContent = fmt(r.Qnt_max, 4);
+    $('t_Qmin').textContent = fmt(r.Qnt_min, 4);
+    $('t_Pmax').textContent = fmt(r.Pnt_max, 2);
+    $('t_Pmin').textContent = fmt(r.Pnt_min, 2);
+    markDone('3');
+    Steps.calcStep4();
+  },
+
+  calcStep4() {
+    if (!STATE.pump) { Steps.calcStep3(); return; }
+    const nqpi = STATE.pump.nqpi;
+    const curve = PAT.offBepCurve(nqpi);
+    STATE.offBep = curve;
+
+    const ctx = $('chartOffBep').getContext('2d');
+    if (window._offBepChart) window._offBepChart.destroy();
+    window._offBepChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: curve.Qratios,
+        datasets: [
+          { label: 'Ht / Hnt', data: curve.H, borderColor: '#3fb6ac', backgroundColor: '#3fb6ac', tension: .3 },
+          { label: 'Pt / Pnt', data: curve.P, borderColor: '#d1994a', backgroundColor: '#d1994a', tension: .3 },
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: getComputedStyle(document.body).getPropertyValue('--ink') } }, title: { display: true, text: `Curvas fuera del bep — n_q,p = ${fmt(nqpi,1)}`, color: getComputedStyle(document.body).getPropertyValue('--ink') } },
+        scales: {
+          x: { title: { display: true, text: 'Qt / Qnt', color: '#9fb0ba' }, ticks: { color: '#9fb0ba' }, grid: { color: '#2b3946' } },
+          y: { ticks: { color: '#9fb0ba' }, grid: { color: '#2b3946' } },
+        }
+      }
+    });
+
+    let rows = '<tr><th>Qt/Qnt</th>' + curve.Qratios.map(q => `<th>${q}</th>`).join('') + '</tr>';
+    rows += '<tr><td>Ht/Hnt</td>' + curve.H.map(v => `<td>${fmt(v, 3)}</td>`).join('') + '</tr>';
+    rows += '<tr><td>Pt/Pnt</td>' + curve.P.map(v => `<td>${fmt(v, 3)}</td>`).join('') + '</tr>';
+    $('offBepTable').innerHTML = rows;
+    markDone('4');
+  },
+
+  calcStep5() {
+    if (!STATE.pump || !STATE.design) { alert('Complete primero los pasos 1 y 3 (datos de diseño y bomba seleccionada).'); return; }
+    const d = STATE.design, p = STATE.pump;
+    const Hstatic = val('in_Hstatic'), L = val('in_L'), D = val('in_D'), a = val('in_a'), J = val('in_J');
+
+    const k = PAT.systemK(Hstatic, d.Qnt, d.Hnt);
+    $('out_kSys').innerHTML = fmt(k, 2);
+
+    const effMax = PAT.effectiveOperatingPoint(p.nqpi, Hstatic, k, p.Hnt_max, p.Qnt_max);
+    const effMin = PAT.effectiveOperatingPoint(p.nqpi, Hstatic, k, p.Hnt_min, p.Qnt_min);
+    $('out_effMax').innerHTML = `Q=${fmt(effMax.Q,4)} m³/s · H=${fmt(effMax.H,2)} m`;
+    $('out_effMin').innerHTML = `Q=${fmt(effMin.Q,4)} m³/s · H=${fmt(effMin.H,2)} m`;
+
+    const ek = PAT.epsilonKappa(p.nqpi);
+    $('out_epsKappa').innerHTML = `ε=${fmt(ek.epsilon,3)} · κ=${fmt(ek.kappa,3)}`;
+
+    const runaway = PAT.steadyRunaway(Hstatic, k, ek.epsilon, ek.kappa, p.Qnp, p.Hnp, p.np);
+    $('out_runaway').innerHTML = `H<sub>tR</sub>=${fmt(runaway.HtR,2)} m · Q<sub>tR</sub>=${fmt(runaway.QtR,4)} m³/s · n<sub>R</sub>=${fmt(runaway.nR,0)} rpm`;
+
+    const etaT = p.etaPmax - 0.03;
+    const Pefft_max = 1000 * PAT.g * effMax.Q * effMax.H * etaT / 1000; // kW
+
+    const wh = PAT.waterhammer({
+      L, D, a, J,
+      Qefft_max: effMax.Q, Hefft_max: effMax.H,
+      kappa: ek.kappa, Qnp: p.Qnp, Hnp: p.Hnp,
+      epsilon: ek.epsilon, nnp: p.np,
+      HtR: runaway.HtR, QtR: runaway.QtR, nR: runaway.nR,
+      Pefft_max, nt: d.nt,
+    });
+    STATE.wh = { ...wh, effMax, effMin, runaway, k, Hstatic, Pefft_max };
+
+    $('out_Tr').innerHTML = fmt(wh.Tr, 4) + ' <span class="sub">s</span>';
+    $('out_Ta').innerHTML = fmt(wh.Ta, 4) + ' <span class="sub">s</span>';
+    $('out_Taeff').innerHTML = fmt(wh.Ta_eff, 4) + ' <span class="sub">s</span>';
+    $('out_Hmax').innerHTML = fmt(wh.HmaxFinal, 2) + ' <span class="unit">m</span>';
+    $('out_nRmax').innerHTML = fmt(wh.nRmaxFinal, 0) + ' <span class="unit">rpm</span>';
+
+    $('out_regimeBadge').innerHTML = wh.reduced
+      ? `<div class="badge ok">T<sub>a,eff</sub> &gt; T<sub>r</sub> — sobrepresión atenuada (ec. 4.9)</div>`
+      : `<div class="badge warn">T<sub>a,eff</sub> &lt; T<sub>r</sub> — caso crítico, golpe de ariete pleno (ec. 4.8)</div>`;
+
+    $('out_whNote').innerHTML = `<div class="note">El fabricante de la bomba debe garantizar que ésta resista <strong>${fmt(wh.nRmaxFinal,0)} rpm</strong> por periodos cortos (transitorio) y <strong>${fmt(runaway.nR,0)} rpm</strong> en régimen permanente (varias horas), además de la sobrepresión H<sub>max</sub> = ${fmt(wh.HmaxFinal,2)} m frente a la presión de diseño de la tubería forzada.</div>`;
+
+    drawWaterhammerChart(p.nqpi, effMax, runaway, wh, Hstatic, k);
+    markDone('5');
+  },
+
+  calcStep6() {
+    const patm_Pa = val('in_patm'), rho = val('in_rho');
+    const Hstat_suction = val('in_Hstatsuc'), Hloss_suction = val('in_Hlosssuc');
+    const D_suction = val('in_Dsuc'), Hvap = val('in_Hvap');
+    const isTurbine = $('in_isTurbine').checked;
+    const runnerD = val('in_runnerD');
+    // Usar el caudal máximo efectivo (golpe de ariete) si ya se calculó -- es el
+    // caso más exigente para la velocidad de succión, igual que en el ejemplo del
+    // manual; si aún no se ha calculado, usar el caudal de diseño como respaldo.
+    const Q = (STATE.wh && STATE.wh.effMax && STATE.wh.effMax.Q)
+      || (STATE.design && STATE.design.Qnt) || val('in_Qnt') || 0.1;
+
+    const r = PAT.npshAvailable({ patm_Pa, rho, Hstat_suction, Hloss_suction, D_suction, Hvap, Q, isTurbine, runnerD });
+    $('out_vs').innerHTML = fmt(r.vs, 3) + ' <span class="sub">m/s</span>';
+    $('out_vh').innerHTML = fmt(r.velocityHead, 3) + ' <span class="sub">m</span>';
+    $('out_NPSH').innerHTML = fmt(r.NPSH, 2) + ' <span class="unit">m</span>';
+
+    const nq_ = (STATE.pump && STATE.pump.nqpi) || (STATE.design && STATE.design.nqp) || null;
+    const Hn = (STATE.pump ? (STATE.pump.Hnt_max + STATE.pump.Hnt_min) / 2 : null) || (STATE.design && STATE.design.Hnt) || val('in_Hnt');
+    if (nq_) {
+      const t = PAT.trehEstimate(nq_, Hn);
+      $('out_TREH').innerHTML = fmt(t.TREH, 2) + ' <span class="unit">m</span>';
+      $('out_sigma').innerHTML = fmt(t.sigma, 3) + ` <span class="sub">(n<sub>q</sub>=${fmt(nq_,1)}, H<sub>n</sub>=${fmt(Hn,2)} m)</span>`;
+      const margin = r.NPSH - t.TREH;
+      if (margin > 0.5) $('out_cavBadge').innerHTML = `<div class="badge ok">NPSH disponible &gt; TREH por ${fmt(margin,2)} m — riesgo de cavitación bajo</div>`;
+      else if (margin > 0) $('out_cavBadge').innerHTML = `<div class="badge warn">Margen ajustado: solo ${fmt(margin,2)} m — revise la altura de instalación</div>`;
+      else $('out_cavBadge').innerHTML = `<div class="badge bad">NPSH disponible &lt; TREH por ${fmt(-margin,2)} m — riesgo de cavitación, baje el PAT o reduzca pérdidas</div>`;
+    } else {
+      $('out_TREH').innerHTML = '—'; $('out_sigma').innerHTML = 'complete el Paso 1 (o 3) primero'; $('out_cavBadge').innerHTML = '';
+    }
+    markDone('6');
+  },
+};
+
+$('in_isTurbine') && $('in_isTurbine').addEventListener('change', () => {
+  $('fieldRunnerD').style.display = $('in_isTurbine').checked ? '' : 'none';
+});
+
+/* ============================================================================
+   GRÁFICO DE GOLPE DE ARIETE (H-Q): resistencia del sistema, PAT, línea de
+   Joukowsky y locus de embalamiento (par nulo)
+   ============================================================================ */
+function drawWaterhammerChart(nqpi, effMax, runaway, wh, Hstatic, k) {
+  const curve = PAT.offBepCurve(nqpi);
+  const Qmax = Math.max(effMax.Q * 1.6, runaway.QtR * 1.4, 0.01);
+  const N = 40;
+  const sysPts = [], patPts = [];
+  for (let i = 0; i <= N; i++) {
+    const Q = Qmax * i / N;
+    sysPts.push({ x: Q, y: Hstatic - k * Q * Q });
+    const ratio = PAT.clamp(Q / effMax.Q, 0.5, 1.8);
+    patPts.push({ x: Q, y: effMax.H * PAT.interpLin(curve.Qratios, curve.H, ratio) });
+  }
+  // línea de par nulo (no-load / locus de embalamiento) parametrizada por H:
+  //   Q = kappa*Qnp*sqrt(H/Hnp)   (fórmula 3.29)
+  const Hmax = Math.max(wh.Hmax, wh.HmaxFinal) * 1.15;
+  const kappa = PAT.epsilonKappa(nqpi).kappa;
+  const Qnp = STATE.pump.Qnp, Hnp = STATE.pump.Hnp;
+  const noloadPts2 = [];
+  for (let i = 0; i <= N; i++) {
+    const H = Hmax * i / N;
+    noloadPts2.push({ x: kappa * Qnp * Math.sqrt(H / Hnp), y: H });
+  }
+  // La recta de Joukowsky solo es físicamente relevante entre el punto de
+  // operación y su intersección con el locus de embalamiento (Hmax sin
+  // reducir) — extenderla hasta Q=0 dispara la escala del gráfico sin aportar
+  // información (ver Fig. 4.14).
+  const Q_at_Hmax = kappa * Qnp * Math.sqrt(wh.Hmax / Hnp);
+  const jouk = [{ x: effMax.Q, y: effMax.H }, { x: Q_at_Hmax, y: wh.Hmax }];
+
+  const yMax = Math.max(wh.Hmax, Hstatic) * 1.15;
+  const xMax = Qmax;
+  // recortar la curva de resistencia y el locus de embalamiento al recuadro visible
+  const sysPtsClipped = sysPts.filter(pt => pt.y <= yMax * 1.05);
+  const noloadClipped = noloadPts2.filter(pt => pt.x <= xMax * 1.05);
+
+  const gridColor = getComputedStyle(document.body).getPropertyValue('--line-soft') || '#2b3946';
+  const tickColor = getComputedStyle(document.body).getPropertyValue('--ink-dim') || '#9fb0ba';
+
+  const ctx = $('chartWaterhammer').getContext('2d');
+  if (window._whChart) window._whChart.destroy();
+  window._whChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label: 'Resistencia del sistema', data: sysPtsClipped, showLine: true, borderColor: '#9fb0ba', pointRadius: 0, borderDash: [4,3], borderWidth: 1.5 },
+        { label: 'Curva PAT (Cmax, eff.máx)', data: patPts, showLine: true, borderColor: '#3fb6ac', pointRadius: 0, borderWidth: 2 },
+        { label: 'Locus de embalamiento (par nulo)', data: noloadClipped, showLine: true, borderColor: '#d1994a', pointRadius: 0, borderWidth: 2 },
+        { label: 'Línea de Joukowsky', data: jouk, showLine: true, borderColor: '#e0685a', pointRadius: 0, borderDash: [2,2], borderWidth: 2 },
+        { label: 'Operación / embalamiento perm. / Hmax', data: [
+            { x: effMax.Q, y: effMax.H },
+            { x: runaway.QtR, y: runaway.HtR },
+            { x: Q_at_Hmax, y: wh.Hmax },
+          ], showLine: false, backgroundColor: '#e7edf1', borderColor:'#111', pointRadius: 5, pointStyle: 'rectRot' },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: tickColor, boxWidth: 14, font: { size: 11 } } } },
+      scales: {
+        x: { type: 'linear', min: 0, max: xMax, title: { display: true, text: 'Q [m³/s]', color: tickColor }, ticks: { color: tickColor }, grid: { color: gridColor } },
+        y: { min: 0, max: yMax, title: { display: true, text: 'H [m]', color: tickColor }, ticks: { color: tickColor }, grid: { color: gridColor } },
+      }
+    }
+  });
+}
+
+/* ============================================================================
+   VALIDACIÓN — ejemplo resuelto del Capítulo 7
+   ============================================================================ */
+const Validation = {
+  load() {
+    // Paso 1
+    $('in_Hnt').value = 12.60; $('in_Qnt').value = 0.100; $('in_nt').value = 1540;
+    $('in_ist').value = 1; $('in_ifl').value = 1;
+    Steps.calcStep1();
+    // Paso 2
+    $('in_np_candidate').value = 1450;
+    Steps.calcStep2();
+    // Paso 3
+    $('in_Hnp').value = 6.65; $('in_Qnp').value = 0.075; $('in_etaPmax').value = 0.76; $('in_np_real').value = 1450;
+    Steps.calcStep3();
+    // Paso 5 — L=26.7 m se retro-calcula de Tr=2L/a=0.044s (a=1214 m/s) tal como
+    // aparece en el manuscrito del Cap.7; ver nota de validación sobre esta
+    // inconsistencia frente a la longitud total de tubería del Apéndice A (~290 m).
+    $('in_Hstatic').value = 15.0; $('in_L').value = 26.7; $('in_D').value = 0.225; $('in_a').value = 1214; $('in_J').value = 0.05;
+    Steps.calcStep5();
+    // Paso 6
+    $('in_patm').value = 97000; $('in_rho').value = 998.2; $('in_Hstatsuc').value = 2.00; $('in_Hlosssuc').value = 0.91;
+    $('in_Dsuc').value = 0.25; $('in_Hvap').value = (2338/(998.2*9.81)).toFixed(4); $('in_isTurbine').checked = true; $('in_runnerD').value = 0.195;
+    Steps.calcStep6();
+
+    Validation.renderTable();
+    goToStep('7');
+  },
+
+  renderTable() {
+    const d = STATE.design, pr = STATE.prelim, p = STATE.pump, wh = STATE.wh;
+    const rows = [
+      ['n_q,ti (paso 2)', d.nqti, 72.8, 1],
+      ['n_q,p (paso 3)', d.nqp, 81.8, 1],
+      ['η_p,max estimada (paso 4)', pr.etaP * 100, 80, '%'],
+      ['C_H preliminar (paso 5)', pr.CH, 1.50, 3],
+      ['C_Q preliminar (paso 5)', pr.CQ, 1.37, 3],
+      ['H_np(nt) (paso 5)', pr.Hnp_nt, 8.40, 2],
+      ['Q_np(nt) (paso 5)', pr.Qnp_nt, 0.073, 4],
+      ['H_np(np) (paso 6)', pr.Hnp_np, 7.45, 2],
+      ['Q_np(np) (paso 6)', pr.Qnp_np, 0.069, 4],
+      ['n_q,pi bomba seleccionada (paso 8a)', p.nqpi, 95.9, 1],
+      ['C_H bomba seleccionada (paso 8b)', p.CH, 1.60, 3],
+      ['C_Q bomba seleccionada (paso 8b)', p.CQ, 1.43, 3],
+      ['H_nt,max en bep (paso 8d)', p.Hnt_max, 13.20, 2],
+      ['H_nt,min en bep (paso 8d)', p.Hnt_min, 10.81, 2],
+      ['Q_nt,max en bep (paso 8d)', p.Qnt_max, 0.126, 4],
+      ['Q_nt,min en bep (paso 8d)', p.Qnt_min, 0.108, 4],
+      ['P_nt,max (paso 9)', p.Pnt_max, 11.91, 2],
+      ['P_nt,min (paso 9)', p.Pnt_min, 8.36, 2],
+      ['ε (Fig. 3.30)', PAT.epsilonKappa(p.nqpi).epsilon, 1.42, 3],
+      ['κ (Fig. 3.30)', PAT.epsilonKappa(p.nqpi).kappa, 1.00, 3],
+      ['H_tR embalamiento permanente (paso 12)', wh.runaway.HtR, 12.80, 2],
+      ['Q_tR embalamiento permanente (paso 12)', wh.runaway.QtR, 0.103, 4],
+      ['n_R embalamiento permanente (paso 12)', wh.runaway.nR, 2857, 0],
+      ['T_r tiempo de reflexión', wh.Tr, 0.044, 4],
+      ['T_a tiempo unitario aceleración', wh.Ta, 0.127, 4],
+      ['T_a,eff tiempo efectivo aceleración', wh.Ta_eff, 0.11, 3],
+      ['H_max final golpe de ariete', wh.HmaxFinal, 14.24, 2],
+      ['n_R,max embalamiento transitorio', wh.nRmaxFinal, 3013, 0],
+      ['σ (Fig. 3.32)', PAT.trehEstimate(p.nqpi, 13.2).sigma, 0.55, 3],
+      ['TREH', PAT.trehEstimate(p.nqpi, 13.2).TREH, 7.26, 2],
+      ['NPSH disponible (ec. A.9 estricta — ver nota)', PAT.npshAvailable({patm_Pa:97000, rho:998.2, Hstat_suction:2.0, Hloss_suction:0.91, D_suction:0.25, Hvap:2338/(998.2*9.81), Q:0.119, isTurbine:true, runnerD:0.195}).NPSH, 8.18, 2],
+    ];
+    let html = '<table class="datatable" style="margin-top:16px;"><tr><th style="text-align:left;">Variable</th><th>App</th><th>Manual (Cap. 7)</th><th>Dif. %</th></tr>';
+    for (const [name, calc, manual, dec] of rows) {
+      const d_ = (typeof dec === 'number') ? dec : 3;
+      const diffPct = manual !== 0 ? Math.abs((calc - manual) / manual * 100) : 0;
+      const badge = diffPct < 3 ? 'ok' : (diffPct < 8 ? 'warn' : 'bad');
+      html += `<tr><td>${name}</td><td>${fmt(calc, d_)}${dec === '%' ? '%' : ''}</td><td>${manual}${dec === '%' ? '%' : ''}</td><td><span class="badge ${badge}" style="padding:2px 8px;">${diffPct.toFixed(1)}%</span></td></tr>`;
+    }
+    html += '</table>';
+    $('validationTableWrap').innerHTML = html;
+  },
+};
+
+/* ============================================================================
+   INICIALIZACIÓN
+   ============================================================================ */
+buildNav();
+Steps.calcStep1();
+</script>
+</body>
+</html>
